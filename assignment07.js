@@ -325,6 +325,7 @@ function textureShader(gl) {
     in vec3 oNormal;
     in vec3 oFragPosition;
     in vec3 oCameraPosition;
+    in vec2 oUV;
 
     uniform vec3 uLight0Position;
     uniform vec3 uLight0Colour;
@@ -348,12 +349,12 @@ function textureShader(gl) {
         vec3 specular = vec3(0.0, 0.0, 0.0);
         vec3 specularColor = vec3(1.0, 1.0, 1.0);
 
-        vec3 ambientColor = vec3(0.0, 0.0, 0.0);
+        vec3 ambientColor = vec3(1.0, 1.0, 1.0);
 
-        //vec4 textureColor = texture(uTexture, oUV);
+        vec4 textureColor = texture(uTexture, oUV);
 
-        fragColor = vec4(( specular * specularColor + diffuse * diffuseColor + ambientColor), 1.0);
-        //fragColor = vec4(( specular * specularColor + diffuse * diffuseColor + ambientColor) * textureColor.rgb, 1.0);
+        //fragColor = vec4(( specular * specularColor + diffuse * diffuseColor + ambientColor), 1.0);
+        fragColor = vec4(( specular * specularColor + diffuse * diffuseColor + ambientColor) * textureColor.rgb, 1.0);
     }
     `;
 
@@ -581,8 +582,39 @@ function initTextureCoords(gl, programInfo, textureCoords) {
     if (textureCoords != null && textureCoords.length > 0) {
         const textureCoordBuffer = gl.createBuffer();
 
-        // TODO: Create and populate a buffer for the UV coordinates
+        /*
+        gl.bindBuffer(gl.ARRAY_BUFFER, textureCoordBuffer);
 
+        gl.bufferData(
+            gl.ARRAY_BUFFER,
+            textureCoords,
+            gl.STATIC_DRAW
+        );
+
+        {
+            const numComponents = 2; 
+            const type = gl.FLOAT; // the data in the buffer is 32bit floats
+            const normalize = false; // don't normalize between 0 and 1
+            const stride = 0; // how many bytes to get from one set of values to the next
+            // Set stride to 0 to use type and numComponents above
+            const offset = 0; // how many bytes inside the buffer to start from
+
+            // Set the information WebGL needs to read the buffer properly
+            gl.vertexAttribPointer(
+                programInfo.attribLocations.vertexUV,
+                numComponents,
+                type,
+                normalize,
+                stride,
+                offset
+            );
+            // Tell WebGL to use this attribute
+            gl.enableVertexAttribArray(
+                programInfo.attribLocations.vertexUV);
+        }
+
+        // TODO: Create and populate a buffer for the UV coordinates
+        */
         return textureCoordBuffer;
     }
 }
@@ -643,7 +675,9 @@ function loadTexture(gl, textureId, url) {
         image.addEventListener('load', () => {
             console.log("Loaded ")
             // TODO: Load texture here
+            
             gl.bindTexture(gl.TEXTURE_2D, texture);
+            gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
             gl.texImage2D(gl.TEXTURE_2D, level, internalFormat,
                 format, type, image);
 
