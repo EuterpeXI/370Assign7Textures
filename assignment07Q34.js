@@ -121,7 +121,6 @@ function setupDrawing(gl, canvas, inputTriangles) {
                 buffers: null,
                 texture: null,
                 textureName: tri.material.texture,
-                alpha: 1.0,
                 materialList: tri.material,
                 // TODO: Add more object specific state
             }
@@ -187,7 +186,13 @@ function drawScene(gl, deltaTime, state) {
 
     // TODO sort objects 
     var sortedObjects = state.objects.sort((a, b) => {
+
+        if (a.materialList.alpha > b.materialList.alpha){
+            return 1;
+        }
+
         return -1;
+
     });
 
     sortedObjects.forEach((object) => {
@@ -196,6 +201,14 @@ function drawScene(gl, deltaTime, state) {
 
         // Update uniforms
         {
+
+            if (object.materialList.alpha > 1.0){
+                gl.depthMask(true);
+            }
+            else{
+                gl.depthMask(false);
+            }
+
             var projectionMatrix = mat4.create();
             var fovy = 60.0 * Math.PI / 180.0; // Vertical field of view in radians
             var aspect = state.canvas.clientWidth / state.canvas.clientHeight; // Aspect ratio of the canvas
@@ -237,6 +250,7 @@ function drawScene(gl, deltaTime, state) {
             gl.uniform3fv(object.programInfo.uniformLocations.diffuseValue, object.materialList.diffuse);
             gl.uniform3fv(object.programInfo.uniformLocations.specularValue, object.materialList.specular);
             gl.uniform1f(object.programInfo.uniformLocations.nValue, object.materialList.n);
+            gl.uniform1f(object.programInfo.uniformLocations.alphaValue, object.materialList.alpha);
         }
 
         // Draw 
@@ -287,13 +301,13 @@ function setupKeypresses(state) {
             case "KeyB":
 
                 state.lights.forEach((object) => {
-                    if (object.strength !== 0){
+                    if (object.strength !== 0) {
                         object.strength = 0;
                     }
-                    else{
+                    else {
                         object.strength = 0.5;
                     }
-                    
+
                 });
 
                 break;
@@ -381,6 +395,7 @@ function textureShader(gl) {
     uniform vec3 diffuseVal;
     uniform vec3 specularVal;
     uniform float nVal;
+    uniform float alphaVal;
     //
     
     uniform vec3 uLight0Position;
@@ -448,6 +463,7 @@ function textureShader(gl) {
             diffuseValue: gl.getUniformLocation(shaderProgram, "diffuseVal"),
             specularValue: gl.getUniformLocation(shaderProgram, "specularVal"),
             nValue: gl.getUniformLocation(shaderProgram, "nVal"),
+            alphaValue: gl.getUniformLocation(shaderProgram, "alphaVal"),
             // TODO: Add additional uniforms here, such as the texture sampler
         },
     };

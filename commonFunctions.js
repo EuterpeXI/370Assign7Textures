@@ -6,6 +6,8 @@ function setup() {
     navTag.classList = "navbar navbar-expand-lg navbar-dark bg-dark";
     navTag.innerHTML = `
     <a class="navbar-brand" href="#">Assignment 7</a>
+    <a class="nav-link" href="./part1.html">Part One</a>
+    <a class="nav-link" href="./part2.html">Part Two</a>
     `;
 
     // Insert the tag into the HMTL document
