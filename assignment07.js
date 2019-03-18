@@ -94,7 +94,7 @@ function setupDrawing(gl, canvas, inputTriangles) {
             {
                 position: vec3.fromValues(1.0, 0.0, 1.0),
                 colour: vec3.fromValues(1.0, 1.0, 1.0),
-                strength: 0.5,
+                strength: 1.5,
             }
         ],
         objects: [],
@@ -291,7 +291,7 @@ function setupKeypresses(state) {
                         object.strength = 0;
                     }
                     else{
-                        object.strength = 0.5;
+                        object.strength = 1.5;
                     }
                     
                 });
@@ -403,18 +403,15 @@ function textureShader(gl) {
         vec3 V = nCameraPosition - oFragPosition;
         vec3 H = normalize(V + lightDirection); // H = V + L normalized
 
-        float NDotH = max(dot(oNormal, H), 0.0);
+        float NDotH = max(dot(oNormal, H), 1.0);
         float NHPow = pow(NDotH, nVal); // (N dot H)^n
         vec3 specular = (specularVal * uLight0Colour) * NHPow;
 
-        // TODO: Add lighting to the scene
-        // Diffuse lighting
-
         vec4 textureColor = texture(uTexture, oUV);
 
-        fragColor = vec4(((ambient + diffuse) * uLight0Strength) * textureColor.rgb, 1.0);
+        vec3 temp = ((ambient + diffuse) * uLight0Strength) * textureColor.rgb;
         specular = specular * uLight0Strength;
-        fragColor = fragColor + vec4(specular.rgb, 1.0);
+        fragColor = vec4((temp + specular), 1.0);
     }
     `;
 

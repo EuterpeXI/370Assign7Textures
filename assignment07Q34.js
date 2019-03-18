@@ -94,7 +94,7 @@ function setupDrawing(gl, canvas, inputTriangles) {
             {
                 position: vec3.fromValues(1.0, 0.0, 1.0),
                 colour: vec3.fromValues(1.0, 1.0, 1.0),
-                strength: 0.5,
+                strength: 1.5,
             }
         ],
         objects: [],
@@ -176,9 +176,10 @@ function drawScene(gl, deltaTime, state) {
     // We want to draw far objects first, and then draw nearer objects on top of those to obscure them.
     // To determine the order to draw, WebGL can test the Z value of the objects.
     // The z-axis goes out of the screen
-    gl.enable(gl.DEPTH_TEST); // Enable depth testing
-    gl.depthFunc(gl.LEQUAL); // Near things obscure far things
-    gl.clearDepth(1.0); // Clear everything
+
+    gl.depthMask(false);
+    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
     // Clear the color and depth buffer with specified clear colour.
     // This will replace everything that was in the previous frame with the clear colour.
@@ -186,12 +187,14 @@ function drawScene(gl, deltaTime, state) {
 
     // TODO sort objects 
     var sortedObjects = state.objects.sort((a, b) => {
-
-        if (a.materialList.alpha > b.materialList.alpha){
-            return 1;
+        let distanceA = vec3.distance(state.camera.position, a.model.position);
+        let distanceB = vec3.distance(state.camera.position, b.model.position);
+        
+        if (distanceA >= distanceB){
+            return -1;
         }
 
-        return -1;
+        return 1;
 
     });
 
@@ -305,7 +308,7 @@ function setupKeypresses(state) {
                         object.strength = 0;
                     }
                     else {
-                        object.strength = 0.5;
+                        object.strength = 1.5;
                     }
 
                 });
@@ -422,14 +425,11 @@ function textureShader(gl) {
         float NHPow = pow(NDotH, nVal); // (N dot H)^n
         vec3 specular = (specularVal * uLight0Colour) * NHPow;
 
-        // TODO: Add lighting to the scene
-        // Diffuse lighting
-
         vec4 textureColor = texture(uTexture, oUV);
 
-        fragColor = vec4(((ambient + diffuse) * uLight0Strength) * textureColor.rgb, 1.0);
+        vec3 temp = ((ambient + diffuse) * uLight0Strength) * textureColor.rgb;
         specular = specular * uLight0Strength;
-        fragColor = fragColor + vec4(specular.rgb, 1.0);
+        fragColor = vec4((temp + specular), alphaVal);
     }
     `;
 
